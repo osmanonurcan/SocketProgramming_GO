@@ -21,7 +21,8 @@ import javax.swing.JTextField;
 public class Game extends javax.swing.JFrame implements MouseListener {
 
     public static Game ThisGame;
-    ImageIcon board = new ImageIcon("go_board_small.jpg");
+    ImageIcon board = new ImageIcon("go_board.png");
+    ImageIcon piece_white = new ImageIcon("piece_white.png");
     JLabel lbl_board = new JLabel(board);
     JLayeredPane lp_board = new JLayeredPane();
     JButton btn_connect = new JButton("Connect");
@@ -30,6 +31,45 @@ public class Game extends javax.swing.JFrame implements MouseListener {
     JTextArea txt_send = new JTextArea();
     JButton btn_send_message = new JButton("Send");
     JTextArea txt_receive = new JTextArea();
+    
+    JLabel[] pieces = new JLabel[36];
+    JLabel piece1 = new JLabel(piece_white);
+    /*JLabel piece2 = new JLabel();
+    JLabel piece3 = new JLabel();
+    JLabel piece4 = new JLabel();
+    JLabel piece5 = new JLabel();
+    JLabel piece6 = new JLabel();
+    JLabel piece7 = new JLabel();
+    JLabel piece8 = new JLabel();
+    JLabel piece9 = new JLabel();
+    JLabel piece10 = new JLabel();
+    JLabel piece11 = new JLabel();
+    JLabel piece12 = new JLabel();
+    JLabel piece13 = new JLabel();
+    JLabel piece14 = new JLabel();
+    JLabel piece15 = new JLabel();
+    JLabel piece16 = new JLabel();
+    JLabel piece17 = new JLabel();
+    JLabel piece18 = new JLabel();
+    JLabel piece19 = new JLabel();
+    JLabel piece20 = new JLabel();
+    JLabel piece21 = new JLabel();
+    JLabel piece22 = new JLabel();
+    JLabel piece23 = new JLabel();
+    JLabel piece24 = new JLabel();
+    JLabel piece25 = new JLabel();
+    JLabel piece26 = new JLabel();
+    JLabel piece27 = new JLabel();
+    JLabel piece28 = new JLabel();
+    JLabel piece29 = new JLabel();
+    JLabel piece30 = new JLabel();
+    JLabel piece31 = new JLabel();
+    JLabel piece32 = new JLabel();
+    JLabel piece33 = new JLabel();
+    JLabel piece34 = new JLabel();
+    JLabel piece35 = new JLabel();
+    JLabel piece36 = new JLabel();*/
+    
     int[] pointer;
 
     /**
@@ -40,34 +80,46 @@ public class Game extends javax.swing.JFrame implements MouseListener {
         pointer = new int[2];
         initComponents();
         ThisGame = this;
-        
+
         txt_name.setBounds(20, 20, 80, 25);
         ThisGame.add(txt_name);
-        
-        btn_connect.setBounds(110, 20, 80, 25);
+
+        btn_connect.setBounds(130, 20, 80, 25);
         ThisGame.add(btn_connect);
-        
-        txt_rival_name.setBounds(200, 20, 80, 25);
+
+        txt_rival_name.setBounds(240, 20, 80, 25);
         txt_rival_name.setBackground(new Color(221, 221, 221));
         txt_rival_name.setEditable(false);
         ThisGame.add(txt_rival_name);
-        
-        txt_send.setBounds(20, 337, 90, 60);
+
+        txt_send.setBounds(20, 380, 100, 60);
         ThisGame.add(txt_send);
-        
-        btn_send_message.setBounds(120, 337, 60, 25);
+
+        btn_send_message.setBounds(140, 380, 60, 25);
         ThisGame.add(btn_send_message);
-        
-        txt_receive.setBounds(190, 337, 90, 60);
+
+        txt_receive.setBounds(220, 380, 100, 60);
         ThisGame.add(txt_receive);
 
-        lbl_board.setBounds(0, 0, 257, 257);
+        lbl_board.setBounds(0, 0, 300, 300);
 
-        lp_board.add(lbl_board);
-        lp_board.setBounds(20, 60, 257, 257);
+        lp_board.add(lbl_board, Integer.valueOf(0));
+        lp_board.setBounds(20, 60, 300, 300);
         ThisGame.add(lp_board);
+
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                pieces[i+j] = new JLabel(piece_white);
+                pieces[i+j].setBounds(24+(43*j), 24+(43*i), 36, 36);
+                pieces[i+j].setBackground(Color.red);
+                lp_board.add(pieces[i+j], Integer.valueOf(1));
+            }
+        }
         
-        ThisGame.setBounds(0, 0, 310, 450);
+        //piece1.setBounds(15, 15, 30, 30);
+        //lp_board.add(piece1,Integer.valueOf(1));
+
+        ThisGame.setBounds(0, 0, 350, 500);
 
         lbl_board.addMouseListener(this);
 
@@ -108,6 +160,7 @@ public class Game extends javax.swing.JFrame implements MouseListener {
         btn_send_message.setEnabled(false);
 
     }
+
     /**
      * @param args the command line arguments
      */
@@ -146,7 +199,6 @@ public class Game extends javax.swing.JFrame implements MouseListener {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-
     @Override
     public void mouseClicked(MouseEvent e) {
         int x = e.getX();
