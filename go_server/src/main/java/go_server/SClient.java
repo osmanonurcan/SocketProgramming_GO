@@ -157,13 +157,17 @@ public class SClient {
                         //eşleşme oldu
                         //her iki tarafada eşleşme mesajı gönder 
                         //oyunu başlat
-                        Message msg1 = new Message(Message.Message_Type.RivalConnected);
-                        msg1.content = TheClient.name;
-                        Server.Send(TheClient.rival, msg1);
-
-                        Message msg2 = new Message(Message.Message_Type.RivalConnected);
-                        msg2.content = TheClient.rival.name;
-                        Server.Send(TheClient, msg2);
+                        String[] client_conn={TheClient.name,"1"};  
+                        Message msg_client_conn = new Message(Message.Message_Type.RivalConnected);
+                        msg_client_conn.content = client_conn;
+                        Server.Send(TheClient.rival, msg_client_conn);
+                        
+                        String[] rival_conn={TheClient.rival.name,"0"};
+                        Message client_rival_conn = new Message(Message.Message_Type.RivalConnected);
+                        client_rival_conn.content = rival_conn;
+                        Server.Send(TheClient, client_rival_conn);
+                        
+                        
                     }
                     //lock mekanizmasını servest bırak
                     //bırakılmazsa deadlock olur.

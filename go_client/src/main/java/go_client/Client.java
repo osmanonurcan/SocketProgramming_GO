@@ -23,6 +23,7 @@ class Listen extends Thread {
 
     public void run() {
         //soket bağlı olduğu sürece dön
+       
         while (Client.socket.isConnected()) {
             try {
                 //mesaj gelmesini bloking olarak dinyelen komut
@@ -33,11 +34,23 @@ class Listen extends Thread {
                     case Name:
                         break;
                     case RivalConnected:
-                        String name = received.content.toString();
                         
-                        Game.ThisGame.txt_rival_name.setText(name);
+                        String[] conn = (String[]) received.content;
+                        Game.ThisGame.turn = Integer.parseInt(conn[1]);
+                        Game.ThisGame.txt_rival_name.setText(conn[0]);
                         Game.ThisGame.btn_send_message.setEnabled(true);
-                        
+                        Game.ThisGame.txt_send.setEnabled(true);
+                        Game.ThisGame.txt_receive.setEnabled(true);
+                        if (Game.ThisGame.turn == 0) {
+                            Game.ThisGame.lbl_info.setText("Sen Siyahsın");
+                            Game.ThisGame.lbl_info.setVisible(true);
+                            
+                        }
+                        if (Game.ThisGame.turn == 1) {
+                            Game.ThisGame.lbl_info.setText("Sen Beyazsız");
+                            Game.ThisGame.lbl_info.setVisible(true);
+                            
+                        }
                         break;
                     case Disconnect:
                         break;
@@ -92,7 +105,7 @@ public class Client {
             Client.sOutput = new ObjectOutputStream(Client.socket.getOutputStream());
             Client.listenMe = new Listen();
             Client.listenMe.start();
-            
+
             //ilk mesaj olarak isim gönderiyorum
             Message msg = new Message(Message.Message_Type.Name);
             msg.content = Game.ThisGame.txt_name.getText();
