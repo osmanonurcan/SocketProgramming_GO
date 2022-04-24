@@ -4,7 +4,6 @@
  */
 package go_server;
 
-
 import game.Message;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -20,6 +19,7 @@ import java.util.logging.Logger;
  */
 public class SClient {
 
+    int[] received_content = new int[2];
     int id;
     public String name = "NoName";
     Socket soket;
@@ -70,45 +70,48 @@ public class SClient {
             this.TheClient = TheClient;
         }
 
+        @Override
         public void run() {
             //client bağlı olduğu sürece dönsün
+
             while (TheClient.soket.isConnected()) {
                 try {
+                    Message received;
                     //mesajı bekleyen kod satırı
-                    Message received = (Message) TheClient.sInput.readObject();
+
+                    received = (Message) TheClient.sInput.readObject();
+
                     //mesaj gelirse bu satıra geçer
                     //mesaj tipine göre işlemlere ayır
                     switch (received.type) {
-                        case Name:
+                        case Name -> {
                             TheClient.name = received.content.toString();
                             // isim verisini gönderdikten sonra eşleştirme işlemine başla
                             TheClient.pairThread.start();
-                            break;
-                        case Disconnect:
-                            break;
-                        case Text:
-                            //gelen metni direkt rakibe gönder
+                        }
+                        case Disconnect -> {
+                        }
+                        case Text -> //gelen metni direkt rakibe gönder
                             Server.Send(TheClient.rival, received);
-                            break;
-                        case Selected:
-                            //gelen seçim yapıldı mesajını rakibe gönder
+                        case Selected -> {//gelen seçim yapıldı mesajını rakibe gönder
+                            received_content = (int[]) received.content;
+                            System.out.println("received: " + received_content[0] + "," + received_content[1]);
                             Server.Send(TheClient.rival, received);
-                            break;
-                        case Bitis:
-                            break;
+
+                        }
+                        case Bitis -> {
+                        }
 
                     }
 
-                } catch (IOException ex) {
+                } catch (IOException | ClassNotFoundException ex) {
                     Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
                     //client bağlantısı koparsa listeden sil
                     Server.Clients.remove(TheClient);
 
-                } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
-                    //client bağlantısı koparsa listeden sil
-                    Server.Clients.remove(TheClient);
                 }
+                //client bağlantısı koparsa listeden sil
+
             }
 
         }
@@ -124,6 +127,7 @@ public class SClient {
             this.TheClient = TheClient;
         }
 
+        @Override
         public void run() {
             //client bağlı ve eşleşmemiş olduğu durumda dön
             while (TheClient.soket.isConnected() && TheClient.paired == false) {
@@ -132,7 +136,7 @@ public class SClient {
                     //sadece bir client içeri grebilir
                     //diğerleri release olana kadar bekler
                     Server.pairTwo.acquire(1);
-                    
+
                     //client eğer eşleşmemişse gir
                     if (!TheClient.paired) {
                         SClient crival = null;
@@ -157,17 +161,16 @@ public class SClient {
                         //eşleşme oldu
                         //her iki tarafada eşleşme mesajı gönder 
                         //oyunu başlat
-                        String[] client_conn={TheClient.name,"1"};  
+                        Object[] client_conn = {TheClient.name, true};
                         Message msg_client_conn = new Message(Message.Message_Type.RivalConnected);
                         msg_client_conn.content = client_conn;
-                        Server.Send(TheClient.rival, msg_client_conn);
-                        
-                        String[] rival_conn={TheClient.rival.name,"0"};
+                        Server.Send(TheClient, msg_client_conn);
+
+                        Object[] rival_conn = {TheClient.rival.name, false};
                         Message client_rival_conn = new Message(Message.Message_Type.RivalConnected);
                         client_rival_conn.content = rival_conn;
-                        Server.Send(TheClient, client_rival_conn);
-                        
-                        
+                        Server.Send(TheClient.rival, client_rival_conn);
+
                     }
                     //lock mekanizmasını servest bırak
                     //bırakılmazsa deadlock olur.
@@ -180,4 +183,3 @@ public class SClient {
     }
 
 }
-

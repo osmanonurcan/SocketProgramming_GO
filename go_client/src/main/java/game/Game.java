@@ -9,9 +9,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -25,10 +22,14 @@ import javax.swing.SwingConstants;
  * @author osman
  */
 public class Game extends javax.swing.JFrame {
-    public int turn = -1;
+
+    public boolean turn = false;
+    public int[] rival_selected_location = new int[2];
+    public int[] my_selected_location = new int[2];
     public static Game ThisGame;
     public ImageIcon board = new ImageIcon("go_board.png");
-    public ImageIcon piece_white = new ImageIcon("piece_white.png");
+    public ImageIcon my_piece_color;
+    public ImageIcon rival_piece_color;
     //public ImageIcon piece_white = createImageIcon("images/piece_white.png", "piece_white");
     public JLabel lbl_board = new JLabel(board);
     public JLayeredPane lp_board = new JLayeredPane();
@@ -39,91 +40,92 @@ public class Game extends javax.swing.JFrame {
     public JButton btn_send_message = new JButton("Send");
     public JTextArea txt_receive = new JTextArea();
     public JLabel lbl_info = new JLabel();
-    
-    JLabel[][] pieces = new JLabel[6][6];
-    JLabel piece1 = new JLabel(piece_white);
-    
+
+    public JLabel[][] pieces = new JLabel[6][6];
+
+    public static final int SIZE = 6;
+    public static final int VACANT = 0;       //empty point
+    public int MY_COLOR;     //Black
+    public int ENEMY_COLOR;  //White
+    public static final int CHECKED = 50;     //Mark for processed points
+    public static final int OUT = 100;        //points out of the board
+    public int[][] board_int = new int[6][6];
     public Game() {
         initComponents();
-        
+
         ThisGame = this;
-        
+
         txt_name.setBounds(20, 20, 80, 25);
         ThisGame.add(txt_name);
-        
+
         btn_connect.setBounds(130, 20, 80, 25);
         btn_connect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //Client.Start("54.172.144.52", 2000);
                 Client.Start("localhost", 2000);
                 //başlangıç durumları
 
                 btn_connect.setEnabled(false);
                 txt_name.setEnabled(false);
-               
+
                 btn_send_message.setEnabled(false);
             }
-            
+
         });
         ThisGame.add(btn_connect);
-        
+
         txt_rival_name.setBounds(240, 20, 80, 25);
         txt_rival_name.setBackground(new Color(221, 221, 221));
         txt_rival_name.setEnabled(false);
         ThisGame.add(txt_rival_name);
-        
+
         lbl_info.setBounds(100, 50, 150, 25);
         lbl_info.setHorizontalAlignment(SwingConstants.CENTER);
-        Font font = new Font("Courier",Font.BOLD,20);
+        Font font = new Font("Courier", Font.BOLD, 20);
         lbl_info.setFont(font);
-        lbl_info.setText("Sen Beyazsın");
+        lbl_info.setText("You are Black");
         lbl_info.setVisible(false);
         ThisGame.add(lbl_info);
-        
+
         txt_send.setBounds(20, 390, 100, 60);
         txt_send.setEnabled(false);
-        btn_send_message.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Message msg = new Message(Message.Message_Type.Text);
-                String x = txt_send.getText();
-                msg.content = txt_send.getText();
-                Client.Send(msg);
-                txt_send.setText("");
-            }
+        btn_send_message.addActionListener((ActionEvent e) -> {
+            Message msg = new Message(Message.Message_Type.Text);
+
+            msg.content = txt_send.getText();
+            Client.Send(msg);
+            txt_send.setText("");
         });
         ThisGame.add(txt_send);
-        
+
         btn_send_message.setBounds(140, 390, 60, 25);
         btn_send_message.setEnabled(false);
         ThisGame.add(btn_send_message);
-        
+
         txt_receive.setBounds(220, 390, 100, 60);
         txt_receive.setEnabled(false);
         ThisGame.add(txt_receive);
-        
+
         lbl_board.setBounds(0, 0, 300, 300);
-        
+
         lp_board.add(lbl_board, Integer.valueOf(0));
         lp_board.setBounds(20, 80, 300, 300);
         ThisGame.add(lp_board);
-        
+
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 6; j++) {
-                pieces[i][j] = new JLabel(piece_white);
+                pieces[i][j] = new JLabel();
                 pieces[i][j].setBounds(24 + (43 * j), 24 + (43 * i), 36, 36);
-                pieces[i][j].setVisible(false);
-                pieces[i][j].addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e){
-                        //BURADSIN!!
-                    }
-                });
-                
+                //pieces[i][j].setVisible(false);
+                pieces[i][j].setName("piece" + i + j);
+                //System.out.println(pieces[i][j].getName());
+                pieces[i][j].addMouseListener(new MyMouseListener(pieces[i][j]));
+
                 lp_board.add(pieces[i][j], Integer.valueOf(1));
             }
         }
-        
+
         ThisGame.setBounds(0, 0, 350, 500);
     }
 
@@ -180,15 +182,74 @@ public class Game extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new Game().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new Game().setVisible(true);
         });
     }
-    
-    public void makeVissible(JLabel[][] array, int i, int j){
-        array[i][j].setVisible(true);
+
+    public boolean isFull() {
+        boolean isfull = true;
+        for (JLabel[] piece : pieces) {
+            for (JLabel p : piece) {
+                if (p.getIcon() == null) {
+                    isfull = false;
+                }
+            }
+        }
+        return isfull;
+    }
+
+    public int score() {
+        int score=0;
+        for (JLabel[] piece : pieces) {
+            for (JLabel p : piece) {
+                int x = (int) p.getName().charAt(5) - '0';
+                int y = (int) p.getName().charAt(6) - '0';
+                if (isCaptured(y,x, board_int)) {
+                    score++;
+                }
+            }
+        }
+        return score;
+    }
+
+    public boolean isCaptured(int col, int row, int[][] board) {
+        boolean result = !isNotCaptured(col, row, board);
+        cleanBoard(board);
+        return result;
+    }
+
+    public boolean isNotCaptured(int col, int row, int[][] board) {
+        int value = board[col][row];
+        if (!(value == MY_COLOR || value == CHECKED)) {
+            return true;
+        }
+
+        int top = row < SIZE - 1 ? board[col][row + 1] : OUT;
+        int bottom = row > 0  ? board[col][row - 1] : OUT;
+        int left = col > 0 ? board[col - 1][row] : OUT;
+        int right = col < SIZE - 1 ? board[col + 1][row] : OUT;
+
+        if (top == VACANT || right == VACANT || left == VACANT || bottom == VACANT) {
+            return true;
+        }
+
+        board[col][row] = CHECKED;
+
+        return (top == MY_COLOR && isNotCaptured(col, row + 1, board))
+                || (bottom == MY_COLOR && isNotCaptured(col, row - 1, board))
+                || (left == MY_COLOR && isNotCaptured(col - 1, row, board))
+                || (right == MY_COLOR && isNotCaptured(col + 1, row, board));
+    }
+
+    public void cleanBoard(int[][] board) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (board[i][j] == CHECKED) {
+                    board[i][j] = MY_COLOR;
+                }
+            }
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables

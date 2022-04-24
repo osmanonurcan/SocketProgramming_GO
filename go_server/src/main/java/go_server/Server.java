@@ -19,6 +19,7 @@ import java.util.logging.Logger;
  */
 class ServerThread extends Thread {
 
+    @Override
     public void run() {
         //server kapanana kadar dinle
         while (!Server.serverSocket.isClosed()) {
@@ -88,6 +89,7 @@ public class Server {
 
         try {
             cl.sOutput.writeObject(msg);
+            
         } catch (IOException ex) {
             Logger.getLogger(SClient.class.getName()).log(Level.SEVERE, null, ex);
         }
