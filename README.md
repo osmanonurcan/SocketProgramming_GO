@@ -2,6 +2,6 @@
 
 ![alt text](https://github.com/osmanonurcan/SocketProgramming_GO/blob/master/img/go.png)
 
-References:
-https://github.com/sametkaya/JanKenPon
+References:</br>
+https://github.com/sametkaya/JanKenPon</br>
 https://www.cosumi.net/en/
